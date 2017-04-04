@@ -14,6 +14,7 @@ def initialize incident, attributes
 			property = property.to_s
 			if property == "materiel"#combobox
 				field = @form_matos = Qt::ComboBox.new  #form_matos = nom du combobox
+				@form_matos.addItem  '' , Qt::Variant.new(0) 
 				@materiel.each do |matos| #afficher la liste déroulante
 					@form_matos.addItem matos.libelle, Qt::Variant.new(matos.id_materiel) 
 				end
@@ -27,9 +28,9 @@ def initialize incident, attributes
 				end
 				field.set_current_index @salles.find_index @incident.salle if @incident.salle.present?
 
-			elsif property == "description"
+			elsif property == "description_incident"
 				field = @form_description_incident = Qt::TextEdit.new
-				form_description_incident.set_text @incident.description_incident
+				@form_description_incident.set_text @incident.description_incident
 				
 
 			elsif property == "objet_de_la_demande"
@@ -49,7 +50,7 @@ def initialize incident, attributes
 				field.set_current_index user_index if (@incident.technicien.present? && user_index)
 
 			else
-				puts property
+				puts property 
 				instance_variable_set("@form_#{property}", Qt::LineEdit.new)
 				field = instance_variable_get("@form_#{property}") 
 				field.set_text(@incident.send("#{property}").to_s)
@@ -61,31 +62,29 @@ def initialize incident, attributes
 		button_text = @incident.id.blank? ? 'Créer' : "Modifier"
 		submit = Qt::PushButton.new button_text
 		submit.connect SIGNAL :clicked do
-    		save_incident
+    		save_incident unless @form_matos.item_data(@form_matos.current_index).to_i == 0
         end
 		layout.add_widget submit
 	end
 
 	def save_incident
-		@attributes.each do |attr|
-			property = attr.parameterize.to_s
-			if property == "materiel_demande"
+		@attributes.each do |property, label|
+			property = property.to_s
+			if property == "materiel"
 				property = "materiel_id"
 				value = @form_matos.item_data(@form_matos.current_index).to_i
 			elsif property == "salle"
 				property = "salle_id"
 				value = @form_salle.item_data(@form_salle.current_index).to_i
  
-			elsif property == "objet_de_la_demande"
-				property = "objet_incident"
-				value = instance_variable_get("@form_#{property}").text
+			elsif property == "objet_incident"
+				value = @form_objet_incident.text
 			else 
 				property = "description_incident"
-				value = instance_variable_get("@form_#{property}").plainText
+				value = @form_description_incident.plainText
 			end
 
-			@incident.send("#{property}=", value)
-
+			@incident.send("#{property}=", value) 
 		end
 		
 		@incident.date_signalement = Time.now.strftime("%d-%m-%Y")
@@ -93,7 +92,9 @@ def initialize incident, attributes
 		@incident.etat = 2
 
 		@incident.save
-		#IncidentController.new.index
-		self.close²
+
+		IncidentController.new.index
+
+		self.close
 	end
 end

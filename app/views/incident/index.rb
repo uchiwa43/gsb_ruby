@@ -45,7 +45,7 @@ class Incident::Index < Window
 
 	def add_incident_list
 
-		puts current_user.is? ["ROLE_TECHNICIEN", "ROLE_RESPONSABLE"]
+		#puts current_user.is? ["ROLE_TECHNICIEN", "ROLE_RESPONSABLE"]
 		@incident_list = Widget::IncidentsTable.new({
 							id: "Id", 
 						etat: 	"Etat", 
